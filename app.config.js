@@ -7,7 +7,7 @@ export default {
     slug: "WayLink",
     version: "1.0.0",
     extra: {
-      googleMapsApiKey: "AIzaSyAkp7D79KD4uSeoiWUgkPazNgzBEMMLsio",
+      googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
     },
     plugins: ["expo-maps"],
   },
