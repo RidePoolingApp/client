@@ -11,6 +11,7 @@ import {
 import * as Location from "expo-location";
 import { LinearGradient } from "expo-linear-gradient";
 import MapView, { Marker } from "react-native-maps";
+import MapViewDirections from "react-native-maps-directions";
 import axios from "axios";
 // Type for map press
 type MapPressEvent = {
@@ -159,6 +160,11 @@ export default function CreateRide() {
           initialRegion={region}
           onPress={handleMapPress}
         >
+          <MapViewDirections
+            apikey={process.env.GOOGLE_MAPS_API_KEY}
+            origin={(pickup?.latitude, pickup?.longitude)}
+            destination={(drop?.latitude, drop?.longitude)}
+          />
           {pickup && (
             <Marker coordinate={pickup} title="Pickup" pinColor="green" />
           )}
