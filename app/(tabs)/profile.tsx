@@ -1,109 +1,145 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useAuth } from "@clerk/clerk-expo";
+import { useUserRole } from "../context/UserRoleContext";
+import { useUser } from "@clerk/clerk-expo";
+import { SignOutButton } from "../components/SigninButton";
 
-export default function DriverProfilePage() {
-  const { userId } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function ProfileScreen() {
+  const { role, setRole } = useUserRole();
+  const { user } = useUser();
 
-  const API_URL = "http://localhost:5000"; // change to your backend base URL
+  const stats =
+    role === "driver"
+      ? [
+          { label: "Rides", value: "28" },
+          { label: "Rating", value: "4.8" },
+          { label: "Earnings", value: "₹2.8K" },
+          { label: "Hours", value: "42" },
+        ]
+      : [
+          { label: "Rides", value: "12" },
+          { label: "Rating", value: "4.9" },
+          { label: "Spent", value: "₹1.2K" },
+          { label: "Saved", value: "₹280" },
+        ];
 
-  const fetchProfile = async () => {
-    try {
-      const [profileRes, vehicleRes] = await Promise.all([
-        fetch(`${API_URL}/api/driver?userId=${userId}`),
-        fetch(`${API_URL}/api/vehicles?userId=${userId}`)
-      ]);
-
-      if (!profileRes.ok || !vehicleRes.ok) {
-        throw new Error("Failed to fetch profile or vehicles");
-      }
-
-      const profileData = await profileRes.json();
-      const vehicleData = await vehicleRes.json();
-
-      setProfile(profileData);
-      setVehicles(vehicleData);
-    } catch (err) {
-      console.error("Error fetching profile:", err);
-      Alert.alert("Error", "Failed to load driver profile.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  if (loading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-gray-100">
-        <ActivityIndicator size="large" color="#16A34A" />
-      </View>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <View className="flex-1 items-center justify-center bg-gray-100">
-        <Text className="text-gray-600 text-lg">No profile found</Text>
-      </View>
-    );
-  }
+  const menuItems =
+    role === "driver"
+      ? [
+          { icon: "car-outline", label: "My Vehicle", color: "#2563EB" },
+          {
+            icon: "document-text-outline",
+            label: "Documents",
+            color: "#DB2777",
+          },
+          { icon: "wallet-outline", label: "Earnings", color: "#16A34A" },
+          { icon: "star-outline", label: "Reviews", color: "#CA8A04" },
+          { icon: "settings-outline", label: "Settings", color: "#6B7280" },
+          { icon: "help-circle-outline", label: "Help", color: "#7C3AED" },
+        ]
+      : [
+          { icon: "time-outline", label: "Ride History", color: "#2563EB" },
+          { icon: "heart-outline", label: "Saved Places", color: "#DB2777" },
+          { icon: "wallet-outline", label: "Payments", color: "#16A34A" },
+          { icon: "star-outline", label: "Reviews", color: "#CA8A04" },
+          { icon: "settings-outline", label: "Settings", color: "#6B7280" },
+          { icon: "help-circle-outline", label: "Help", color: "#7C3AED" },
+        ];
 
   return (
-    <ScrollView className="flex-1 bg-gray-100">
+    <ScrollView className="flex-1 bg-gray-50">
       {/* Header */}
       <LinearGradient
-        colors={["#16A34A", "#22C55E"]}
-        className="px-6 pt-16 pb-12 rounded-b-3xl shadow-md items-center"
+        colors={
+          role === "driver" ? ["#16A34A", "#22C55E"] : ["#4F46E5", "#3B82F6"]
+        }
+        className="px-6 pt-16 pb-8 rounded-b-[32px]"
       >
-        <Image
-          source={{ uri: profile.photo || "https://i.pravatar.cc/150?img=12" }}
-          className="w-28 h-28 rounded-full border-4 border-white mb-4"
-        />
-        <Text className="text-2xl font-bold text-white">{profile.name}</Text>
-        <Text className="text-white opacity-80">{profile.email}</Text>
-      </LinearGradient>
-
-      {/* Profile Info */}
-      <View className="p-6">
-        <Text className="text-xl font-semibold text-gray-800 mb-3">Driver Details</Text>
-        <View className="bg-white p-4 rounded-2xl mb-4 shadow">
-          <Text className="text-gray-700">📞 Phone: {profile.phone}</Text>
-          <Text className="text-gray-700">🎂 DOB: {profile.dob}</Text>
-          <Text className="text-gray-700">🪪 Aadhar: {profile.aadharNumber}</Text>
-          <Text className="text-gray-700">🪪 DL: {profile.dlNumber}</Text>
+        <View className="flex-row justify-between items-center mb-6">
+          <Text className="text-2xl font-bold text-white">Profile</Text>
+          <View className="flex-row gap-2">
+            <TouchableOpacity
+              className="bg-white/20 rounded-full p-2"
+              onPress={() => setRole(null)}
+            >
+              <Ionicons name="swap-horizontal" size={24} color="white" />
+            </TouchableOpacity>
+            <SignOutButton />
+          </View>
         </View>
 
-        {/* Vehicle Info */}
-        <Text className="text-xl font-semibold text-gray-800 mb-3">My Vehicles</Text>
-        {vehicles.length > 0 ? (
-          vehicles.map((v, index) => (
-            <View key={index} className="bg-white p-4 rounded-2xl mb-4 shadow">
-              <Text className="text-gray-800 font-semibold">{v.name}</Text>
-              <Text className="text-gray-600">Plate: {v.numberPlate}</Text>
-              <Text className="text-gray-600">Seats: {v.seats}</Text>
-              <Text className="text-gray-600">Type: {v.type}</Text>
-              <Text className="text-gray-600">RC: {v.rc}</Text>
+        <View className="flex-row items-center gap-4">
+          {user?.imageUrl ? (
+            <Image
+              source={{ uri: user.imageUrl }}
+              className="w-20 h-20 rounded-full border-2 border-white"
+            />
+          ) : (
+            <View className="w-20 h-20 rounded-full bg-white/20 items-center justify-center">
+              <Ionicons name="person" size={40} color="white" />
             </View>
-          ))
-        ) : (
-          <Text className="text-gray-500">No vehicles added</Text>
-        )}
+          )}
+          <View>
+            <Text className="text-white text-lg font-semibold">
+              {user?.firstName} {user?.lastName}
+            </Text>
+            <Text className="text-white/80">
+              {user?.primaryEmailAddress?.emailAddress}
+            </Text>
+            <View className="flex-row items-center mt-1 bg-white/20 rounded-full px-3 py-1">
+              <Ionicons
+                name={role === "driver" ? "car-outline" : "person-outline"}
+                size={16}
+                color="white"
+              />
+              <Text className="text-white ml-1 capitalize">{role}</Text>
+            </View>
+          </View>
+        </View>
 
-        {/* Action Buttons */}
-        <TouchableOpacity className="bg-green-600 py-4 rounded-xl items-center mt-4">
-          <Text className="text-white font-semibold text-lg">✏️ Edit Profile</Text>
-        </TouchableOpacity>
+        {/* Stats */}
+        <View className="flex-row justify-between mt-6 bg-white/10 rounded-2xl p-4">
+          {stats.map((stat, index) => (
+            <View key={index} className="items-center">
+              <Text className="text-white text-xl font-bold">{stat.value}</Text>
+              <Text className="text-white/80 text-sm">{stat.label}</Text>
+            </View>
+          ))}
+        </View>
+      </LinearGradient>
 
-        <TouchableOpacity className="bg-blue-600 py-4 rounded-xl items-center mt-3">
-          <Text className="text-white font-semibold text-lg">➕ Add Vehicle</Text>
-        </TouchableOpacity>
+      {/* Menu Items */}
+      <View className="p-6">
+        <View className="bg-white rounded-2xl shadow-sm divide-y divide-gray-100">
+          {menuItems.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              className="flex-row items-center px-4 py-4"
+            >
+              <View
+                style={{ backgroundColor: `${item.color}10` }}
+                className="w-10 h-10 rounded-full items-center justify-center mr-4"
+              >
+                <Ionicons
+                  name={item.icon as any}
+                  size={20}
+                  color={item.color}
+                />
+              </View>
+              <Text className="flex-1 text-gray-700 font-medium">
+                {item.label}
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View className="mt-6 bg-white rounded-2xl p-4 shadow-sm">
+          <Text className="text-gray-400 text-sm text-center">
+            App Version 1.0.0
+          </Text>
+        </View>
       </View>
     </ScrollView>
   );
