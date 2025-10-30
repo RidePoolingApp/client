@@ -83,7 +83,7 @@ export default function CreateRide() {
     }
 
     try {
-      const apiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_APIKEY;
+      const apiKey = process.env.GOOGLE_MAPS_APIKEY;
       if (!apiKey) {
         console.error("Google Maps API key is missing");
         return;
